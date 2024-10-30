@@ -1,5 +1,6 @@
 
-# MyPlaces 📸📍
+# MyPlaces 📸📍 
+*🚧 Work in Progress 🚧*
 
 ## Project Description
 
