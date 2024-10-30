@@ -1,10 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_places/models/place.dart';
 
 import 'package:my_places/providers/user_places.dart';
 import 'package:my_places/widgets/image_input.dart';
+import 'package:my_places/widgets/location_input.dart';
 
+/// A page that allows the user to add a new place.
+///
+/// This page provides a form for the user to enter the name, description,
+/// and image of a new place. It uses a [ConsumerStatefulWidget] to interact
+/// with the [UserPlacesNotifier] provider.
 class AddPlacePage extends ConsumerStatefulWidget {
   const AddPlacePage({super.key});
 
@@ -13,15 +21,29 @@ class AddPlacePage extends ConsumerStatefulWidget {
 }
 
 class _AddPlacePageState extends ConsumerState<AddPlacePage> {
+  /// Controllers for the name and description text fields.
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  /// Save the place using the [UserPlacesNotifier] provider
+  /// Variables to store the selected image and location.
+  File? _selectedImage;
+
+  /// The selected location of the place.
+  PlaceLocation? _selectedLocation;
+
+  /// Save the place using the [UserPlacesNotifier] provider.
+  ///
+  /// This method validates the input fields and shows an error dialog
+  /// if any field is empty. If all fields are filled, it creates a new
+  /// [Place] object and adds it to the list of places using the provider.
   void _savePlace() {
     final name = _nameController.text;
     final description = _descriptionController.text;
 
-    if (name.isEmpty || description.isEmpty) {
+    if (name.isEmpty ||
+        description.isEmpty ||
+        _selectedImage == null ||
+        _selectedLocation == null) {
       showCupertinoDialog(
         context: context,
         builder: (context) {
@@ -42,7 +64,13 @@ class _AddPlacePageState extends ConsumerState<AddPlacePage> {
       return;
     }
 
-    final place = Place(name: name, description: description);
+    final place = Place(
+      name: name,
+      description: description,
+      image: _selectedImage!,
+      location: _selectedLocation!,
+    );
+
     ref.read(userPlacesProvider.notifier).addPlace(place);
 
     Navigator.of(context).pop();
@@ -80,19 +108,32 @@ class _AddPlacePageState extends ConsumerState<AddPlacePage> {
                     prefix: const Text('Name'),
                     child: CupertinoTextFormFieldRow(
                       controller: _nameController,
+                      autocorrect: true,
                       placeholder: 'Enter place name',
                       textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
                     ),
                   ),
                   CupertinoFormRow(
                     prefix: const Text('Description'),
                     child: CupertinoTextFormFieldRow(
                       controller: _descriptionController,
+                      autocorrect: true,
                       textCapitalization: TextCapitalization.sentences,
                       placeholder: 'Enter place description',
+                      textInputAction: TextInputAction.next,
                     ),
                   ),
-                  ImageInput(),
+                  ImageInput(
+                    onSelectImage: (image) {
+                      _selectedImage = image;
+                    },
+                  ),
+                  LocationInput(
+                    onLocationSelected: (location) {
+                      _selectedLocation = location;
+                    },
+                  ),
                 ],
               )
             ],
