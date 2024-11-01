@@ -1,14 +1,14 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:my_places/models/place.dart';
 import 'package:my_places/pages/map.dart';
+import 'package:my_places/services/geocoding_service.dart';
+import 'package:my_places/services/location_service.dart';
 
 class LocationInput extends StatefulWidget {
+  /// Callback function to be called when a location is selected
   final void Function(PlaceLocation location) onLocationSelected;
 
   const LocationInput({super.key, required this.onLocationSelected});
@@ -18,90 +18,70 @@ class LocationInput extends StatefulWidget {
 }
 
 class _LocationInputState extends State<LocationInput> {
-  PlaceLocation? _pickedLocation;
+  /// Services to get the location and address
+  final _locationService = LocationService();
+  final _geocodingService = GeocodingService();
+
+  /// The location that is selected
+  PlaceLocation? _location;
+
+  /// Whether the location is being fetched
   var _isGettingLocation = false;
 
-  final _apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
-
-  /// Saves the location to the state and calls the callback
-  /// to inform the parent widget about the selected location
+  /// Handles the location and updates the state
+  /// and calls the callback function
   ///
   /// Parameters:
-  /// - [latitude]: The latitude of the location
-  /// - [longitude]: The longitude of the location
-  Future<void> _savePlace(double latitude, double longitude) async {
-    final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$_apiKey');
-
-    final response = await http.get(url);
-    final data = json.decode(response.body);
-    final address = data['results'][0]['formatted_address'];
+  /// - [lat]: The latitude of the location
+  /// - [lng]: The longitude of the location
+  Future<void> _handleLocation(double lat, double lng) async {
+    final address = await _geocodingService.getAddressFromCoordinates(lat, lng);
+    final location = PlaceLocation(
+      latitude: lat,
+      longitude: lng,
+      address: address,
+    );
 
     setState(() {
-      _pickedLocation = PlaceLocation(
-        latitude: latitude,
-        longitude: longitude,
-        address: address,
-      );
+      _location = location;
       _isGettingLocation = false;
     });
 
-    widget.onLocationSelected(_pickedLocation!);
+    widget.onLocationSelected(location);
   }
 
-  /// Fetches the current location and saves it
-  /// to the state
-  void _getCurrentLocation() async {
-    final location = Location();
+  Future<PlaceLocation?> _getCurrentLocation() async {
+    if (!await _locationService.checkServiceEnabled()) return null;
+    if (!await _locationService.checkPermissionGranted()) return null;
 
-    if (!await _checkServiceEnabled(location)) return;
-    if (!await _checkPermissionGranted(location)) return;
+    setState(() => _isGettingLocation = true);
 
-    setState(() {
-      _isGettingLocation = true;
-    });
-
-    final locationData = await location.getLocation();
-
-    if (locationData.latitude == null || locationData.longitude == null) {
-      // TODO: inform user that location could not be fetched
-      setState(() {
-        _isGettingLocation = false;
-      });
-      return;
+    final locationData = await _locationService.getCurrentLocation();
+    if (locationData?.latitude == null || locationData?.longitude == null) {
+      // TODO: inform user that location is not available
+      return null;
     }
 
-    _savePlace(locationData.latitude!, locationData.longitude!);
+    await _handleLocation(locationData!.latitude!, locationData.longitude!);
+    return _location;
   }
 
-  /// Opens the map page to select a location
-  /// and saves the location when selected
   void _selectOnMap() async {
-    final pickedLocation = await Navigator.of(context).push<LatLng>(
-      CupertinoPageRoute(builder: (context) => const MapPage()),
+    final currentLocation = await _getCurrentLocation();
+
+    if (!mounted) return;
+
+    final manualPickedLocation = await Navigator.of(context).push<LatLng>(
+      CupertinoPageRoute(
+        builder: (context) => MapPage(location: currentLocation),
+      ),
     );
 
-    if (pickedLocation == null) return;
+    if (!mounted) return;
+    if (manualPickedLocation == null) return;
 
-    _savePlace(pickedLocation.latitude, pickedLocation.longitude);
-  }
-
-  /// Checks if the location service is enabled
-  Future<bool> _checkServiceEnabled(Location location) async {
-    var serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-    }
-    return serviceEnabled;
-  }
-
-  /// Checks if the location permission is granted
-  Future<bool> _checkPermissionGranted(Location location) async {
-    var permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-    }
-    return permissionGranted == PermissionStatus.granted;
+    _handleLocation(
+        manualPickedLocation.latitude, manualPickedLocation.longitude);
   }
 
   @override
@@ -126,6 +106,10 @@ class _LocationInputState extends State<LocationInput> {
     );
   }
 
+  /// Returns the preview content of the location
+  /// - If the location is being fetched, it shows a loading indicator
+  /// - If the location is picked, it shows a static map of the location
+  /// - If the location is not picked, it returns an empty container
   Widget _previewContent() {
     if (_isGettingLocation) {
       return const Center(
@@ -134,18 +118,12 @@ class _LocationInputState extends State<LocationInput> {
     }
 
     // Location is picked
-    if (_pickedLocation != null) {
-      // Render text if API key is not set
-      if (_apiKey == null) {
-        return const Text('Location Picked');
-      }
-
-      // Render image if API key is set
+    if (_location != null) {
       return Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
         child: Image.network(
-          getLocationImage(_pickedLocation!),
+          _geocodingService.getStaticMapUrl(_location!),
           fit: BoxFit.cover,
           width: 50,
           height: 50,
@@ -155,12 +133,4 @@ class _LocationInputState extends State<LocationInput> {
 
     return const SizedBox.shrink();
   }
-}
-
-/// Returns the URL for the static map image of the location
-///
-/// Parameters:
-/// - [location]: The location for which the image is to be fetched
-String getLocationImage(PlaceLocation location) {
-  return 'https://maps.googleapis.com/maps/api/staticmap?center=${location.latitude},${location!.longitude}&zoom=16&size=400x200&markers=color:red%7Clabel:A%7C${location!.latitude},${location!.longitude}&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}';
 }

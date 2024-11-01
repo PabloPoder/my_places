@@ -21,13 +21,14 @@ class MapPage extends StatefulWidget {
   /// Default selection mode is set to true
   const MapPage({
     super.key,
-    this.location = const PlaceLocation(
-      latitude: 37.422,
-      longitude: -122.084,
-      address: '',
-    ),
+    PlaceLocation? location,
     this.isSelecting = true,
-  });
+  }) : location = location ??
+            const PlaceLocation(
+              latitude: 37.422,
+              longitude: -122.084,
+              address: '',
+            );
 
   @override
   State<MapPage> createState() => _MapPageState();

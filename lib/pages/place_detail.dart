@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_places/models/place.dart';
 import 'package:my_places/pages/map.dart';
-import 'package:my_places/widgets/location_input.dart';
+import 'package:my_places/services/geocoding_service.dart';
 
 /// A screen that displays the details of a specific place.
 ///
@@ -12,12 +12,13 @@ import 'package:my_places/widgets/location_input.dart';
 /// consistent iOS look and feel.
 class PlaceDetailScreen extends StatelessWidget {
   final Place place;
+  final _geocodingService = GeocodingService();
 
   /// Creates a [PlaceDetailScreen] widget.
   ///
   /// The [place] parameter must not be null and should contain the
   /// details of the place to be displayed.
-  const PlaceDetailScreen({super.key, required this.place});
+  PlaceDetailScreen({super.key, required this.place});
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +28,16 @@ class PlaceDetailScreen extends StatelessWidget {
     final String formattedDate = formatter.format(place.date);
 
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
+      navigationBar: CupertinoNavigationBar(
         transitionBetweenRoutes: true,
         automaticallyImplyMiddle: true,
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            // TODO: Implement delete functionality
+          },
+          child: const Icon(CupertinoIcons.delete),
+        ),
       ),
       child: SafeArea(
         child: Stack(
@@ -83,8 +91,8 @@ class PlaceDetailScreen extends StatelessWidget {
                       },
                       child: CircleAvatar(
                         radius: 60,
-                        backgroundImage:
-                            NetworkImage(getLocationImage(place.location)),
+                        backgroundImage: NetworkImage(
+                            _geocodingService.getStaticMapUrl(place.location)),
                       ),
                     ),
                     const SizedBox(height: 24),

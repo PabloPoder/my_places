@@ -30,7 +30,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        //TODO: Add your own Google Maps API key
         resValue "string", "google_maps_api_key", "\"${apiKey}\""
     }
 
