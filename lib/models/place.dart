@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 /// Uuid instance to generate unique identifiers
@@ -27,8 +28,17 @@ class Place {
     required this.description,
     required this.image,
     required this.location,
-  })  : id = uuid.v4(),
-        date = DateTime.now();
+    String? id,
+    DateTime? date,
+  })  : id = id ?? uuid.v4(),
+        date = date ?? DateTime.now();
+
+  /// Get the formatted date of the place
+  /// The date is formatted as "EEEE, MMMM d, y"
+  String getFormattedDate() {
+    final DateFormat formatter = DateFormat('EEEE, MMMM d, y');
+    return formatter.format(date);
+  }
 }
 
 /// PlaceLocation model, which contains the location information of a place

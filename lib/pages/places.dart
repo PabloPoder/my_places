@@ -5,11 +5,26 @@ import 'package:my_places/pages/add_place.dart';
 import 'package:my_places/providers/user_places.dart';
 import 'package:my_places/widgets/places_list.dart';
 
-class PlacesPage extends ConsumerWidget {
+class PlacesPage extends ConsumerStatefulWidget {
   const PlacesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return _PlacesPageState();
+  }
+}
+
+class _PlacesPageState extends ConsumerState<PlacesPage> {
+  late Future<void> _placesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _placesFuture = ref.read(userPlacesProvider.notifier).loadPlaces();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final userPlaces = ref.watch(userPlacesProvider);
 
     return CupertinoPageScaffold(
@@ -33,7 +48,13 @@ class PlacesPage extends ConsumerWidget {
             ),
           ];
         },
-        body: PlacesList(places: userPlaces),
+        body: FutureBuilder(
+          future: _placesFuture,
+          builder: (context, snapshot) =>
+              snapshot.connectionState == ConnectionState.waiting
+                  ? const CupertinoActivityIndicator()
+                  : PlacesList(places: userPlaces),
+        ),
       ),
     );
   }
