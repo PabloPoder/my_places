@@ -65,23 +65,34 @@ class DBHelper {
     try {
       final db = await database;
       final id = await db.insert(
-          'user_places',
-          {
-            'id': place.id,
-            'name': place.name,
-            'description': place.description,
-            'image': place.image.path,
-            'date': place.date.toIso8601String(),
-            'lat': place.location.latitude,
-            'lng': place.location.longitude,
-            'address': place.location.address,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace);
+        'user_places',
+        {
+          'id': place.id,
+          'name': place.name,
+          'description': place.description,
+          'image': place.image.path,
+          'date': place.date.toIso8601String(),
+          'lat': place.location.latitude,
+          'lng': place.location.longitude,
+          'address': place.location.address,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
       return id;
     } catch (error) {
       print('Error inserting into user_places: $error');
       return -1;
     }
+  }
+
+  static Future<int> deletePlace(String id) async {
+    final db = await database;
+    final result = await db.delete(
+      'user_places',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return result;
   }
 
   /// Fetches the data from the database
@@ -112,6 +123,4 @@ class DBHelper {
 
     return places;
   }
-
-  // TODO: Implement the deletePlace method
 }

@@ -25,9 +25,10 @@ class _PlacesPageState extends ConsumerState<PlacesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final userPlaces = ref.watch(userPlacesProvider);
+    final userPlaces = ref.watch(userPlacesProvider).places;
 
     return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.secondarySystemBackground,
       child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return <Widget>[

@@ -84,9 +84,9 @@ class PlaceDetailScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.7),
-                      Colors.black.withOpacity(0.4),
-                      Colors.black.withOpacity(0.05),
+                      Colors.black.withOpacity(0.8),
+                      Colors.black.withOpacity(0.5),
+                      Colors.black.withOpacity(0.3),
                       Colors.black.withOpacity(0.02),
                     ],
                     begin: Alignment.bottomCenter,
@@ -128,23 +128,22 @@ class PlaceDetailScreen extends ConsumerWidget {
                       place.description,
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                          fontSize: 20,
                           color: CupertinoColors.extraLightBackgroundGray),
                     ),
                     const SizedBox(height: 20),
                     Text(
                       textAlign: TextAlign.center,
-                      // TODO Remove: place.location.address.split(' ').skip(1).join(' '),
                       place.location.address,
                       style: const TextStyle(
-                          fontSize: 18, color: CupertinoColors.systemGrey),
+                          fontSize: 18, color: CupertinoColors.systemGrey3),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       textAlign: TextAlign.center,
                       place.getFormattedDate(),
                       style: const TextStyle(
-                          fontSize: 14, color: CupertinoColors.systemGrey),
+                          fontSize: 14, color: CupertinoColors.systemGrey3),
                     ),
                   ],
                 ),
