@@ -10,8 +10,6 @@
 
 - Photo Capture 📷: Take photos directly from the app to document your visits.
 - Location Tracking 📍: Save the GPS location of each place you visit for easy access.
-- Personalized Listings 🗂️: Organize and view your places in an intuitive interface.
-- Sharing 🔗: Share your lists with friends and family, or inspire them with your discoveries.
 
 ## Technologies Used
 
