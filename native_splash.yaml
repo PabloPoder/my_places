@@ -1,0 +1,17 @@
+# to create the splash screen for android and ios
+# path must be specified if the flutter_native_splash's config is not in pubspec.yaml
+# dart run flutter_native_splash:create --path=native_splash.yaml
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+
+  # light grey
+  color: "#f5f5f5"
+
+  image: "assets/my_places_logo.png"
+  image_dark: "assets/my_places_logo.png"
+
+  android_12:
+    color: "#f5f5f5"
+    image: "assets/my_places_logo.png"
